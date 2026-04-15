@@ -1,0 +1,146 @@
+---
+title: "Индивидуальное задание по проекту"
+author: "Группа 9, dpodolin"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+### Задание 
+
+Индивидуальное задание: 
+
+"Добавить в content-based систему переменную \"наличие популярных актеров\", где популярными актерами считать топ-5 самых встречающихся в датасете. Сравнить предсказания на одних и тех же примерах в новой (с актерами) и старой (без актеров) системе"
+
+```{r}
+suppressMessages(source("~/shared/minor2_2023/2-tm-net/project/personalTaskProject.R"))
+get_project_ind_questions()
+```
+
+
+### Предыдущий код
+
+
+```{r message = FALSE, warning=FALSE}
+library (dplyr)
+library(stringr)
+library (tidyr)
+library(igraph)
+library(tnet)
+library(ggplot2)
+library(tidytext)
+library(recommenderlab)
+library(tidyverse)
+load("~/shared/minor2_2023/data/project/metadata_g_9.RData")
+load("~/shared/minor2_2023/data/project/ratings_g_9.RData")
+# предварительный код
+```
+
+Сначала мы несколько изменим дата сет исходный для удобной работы с ним, затем найдем этих самый поплуярных актеров, а потом через 1 = True и 0 = False укажем:"Есть ли в фильме популярный актер из топ 5 списка?"
+```{r message = FALSE, warning=FALSE}
+#хочу обьединить некоторые сеты для удобного исследования
+a = metadata %>% select(title, directedBy, starring, item_id, avgRating)
+tags$tag_id = tags$id
+b = merge(survey_answers, tags, by = "tag_id") %>% select(-id)
+c = merge(b,ratings, by = "user_id")#отсюда видно, что пользователи сами пишут один и тот же тэг к разным фильмам(item_id.y), и ставят этим разным фильмам разные оценки, то есть ЕСТЬ ГРУППЫ ПО ТЭГАМ
+#кроме того видно что тэги в некотором роде не уникальны и есть от одного пользователя 10 тэгов "zombies", а от другого 15 "zombie"
+#поэтому есть смысл в ЛЕММАТИЗАЦИИ  тэгов. Однако стоит обратить внимание, что не все тэги с одинаковым смысловым значением мы програмно можем отнести к одному, так напрмер "world war ii" b "wwii" придется воспринимать как два разных смысловых тэга
+
+library(textstem)
+c$tag = c$tag %>% stem_words(words, language = "en")
+
+
+c = c %>% select(-item_id.x) %>% rename("item_id" = item_id.y)
+movies_data  = merge(c,a, by = "item_id") #это важный дата сет, так как здесь видно много информации: все тэги(лемматизированные) к одному фильму, оценка пользователя, оценка на MovieLens
+
+
+# Разделение столбца "starring" на отдельные имена актеров
+actors_split <- strsplit(as.character(movies_data $starring), ", ")
+
+# Создание списка всех актеров
+all_actors <- unlist(actors_split)
+
+# Подсчет частоты упоминаний каждого актера
+actor_frequency <- table(all_actors)
+
+# Выбор топ-5 самых часто встречающихся актеров
+top_actors <- names(sort(actor_frequency, decreasing = TRUE))[1:5]
+
+# Добавление переменной "наличие популярных актеров" в датасет
+movies_data$popular_actor <- as.integer(unlist(lapply(actors_split, function(x) any(x %in% top_actors))))
+
+
+```
+
+
+### Решение
+
+Идея:
+задача заключается в рассмотрении разницы двух рекомендательных систем.
+Поэтому сделаю исходно простую систему - систему рекомендации по определенным тегам, которые есть в списке понравившихся фильмов для конкертного польозователя(предполагается что пользователь сам пишет 5 фильмов в функцию - ниже будут примеры).
+
+```{r message = FALSE, warning=FALSE}
+# Функция для рекомендации фильмов без учета популярного актера
+content_based_recommendation_no_actor <- function(user_favorite_movies, movies_data) {
+  unique_tags <- unique(unlist(strsplit(movies_data[match(user_favorite_movies, movies_data$title), "tag"], ", ")))
+  
+  recommended_movies <- subset(movies_data, 
+                               grepl(paste(unique_tags, collapse = "|"), tag) & 
+                                 !(title %in% user_favorite_movies))
+  
+  recommended_movies <- unique(as.character(recommended_movies[["title"]]))  # Удаление дубликатов
+  
+  return(head(recommended_movies, 5))
+}
+
+# Пример использования функции для рекомендации фильмов без учета популярного актера
+user_favorite_movies <- c("Jumanji (1995)", "Sense and Sensibility (1995)", "Leaving Las Vegas (1995)", "Babe (1995)", "Seven (a.k.a. Se7en) (1995)")
+recommended_movies_no_actor <- content_based_recommendation_no_actor(user_favorite_movies, movies_data)
+
+print(recommended_movies_no_actor)
+
+```
+
+```{r message = FALSE, warning=FALSE}
+# Функция для рекомендации фильмов c актерми
+content_based_recommendation_with_actors <- function(user_favorite_movies, movies_data) {
+  unique_tags <- unique(unlist(strsplit(movies_data[match(user_favorite_movies, movies_data$title), "tag"], ", ")))
+  popular_actor_marker <- any(movies_data[match(user_favorite_movies, movies_data$title), "popular_actor"])
+  
+  recommended_movies <- subset(movies_data, 
+                               grepl(paste(unique_tags, collapse = "|"), tag) & popular_actor == popular_actor_marker &
+                                 !(title %in% user_favorite_movies))
+  
+  recommended_movies <- unique(as.character(recommended_movies[["title"]]))  # Удаление дубликатов
+  
+  return(head(recommended_movies, 5))
+}
+
+# Пример использования функции для рекомендации фильмов без повторов
+user_favorite_movies <- c("Jumanji (1995)", "Sense and Sensibility (1995)", "Leaving Las Vegas (1995)", "Babe (1995)", "Seven (a.k.a. Se7en) (1995)")
+recommended_movies_with_actors <- content_based_recommendation_with_actors(user_favorite_movies, movies_data)
+
+print(recommended_movies_with_actors)
+
+
+```
+Итак мы имеем две рекомендательные системы, с актерами и без
+На одном примере с набором фильмов вывелось 2 разных результата но совпадающие сначала по набору тэгов() а во втором по наличию еще и акетров из списка top_actors("Jim Carrey"     "Kirsten Dunst"  "Brian Cox"      "Morgan Freeman" "Gary Oldman"   )
+
+### Пример
+Еще раз вынесу примеры работы
+```{r message = FALSE, warning=FALSE}
+user_favorite_movies <- c("Jumanji (1995)", "Sense and Sensibility (1995)", "Leaving Las Vegas (1995)", "Babe (1995)", "Seven (a.k.a. Se7en) (1995)") #пусть такие фильмы любит
+
+recommended_movies_no_actor <- content_based_recommendation_no_actor(user_favorite_movies, movies_data)
+print(recommended_movies_no_actor)
+
+recommended_movies_with_actors <- content_based_recommendation_with_actors(user_favorite_movies, movies_data)
+print(recommended_movies_with_actors)
+
+```
+
+
+### Выводы
+
+Рекомендательная система работает славно, мне нравится, спасибо за интересное задание нашим любимым преподавателям!
