@@ -1,4 +1,4 @@
-# Movie Recommender System (группа 9)
+# Collaborative ContentBased Recommender (группа 9)
 
 ## 📌 О проекте
 
