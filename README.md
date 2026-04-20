@@ -180,8 +180,6 @@ Group part: group_part/group_report.html
 
 Individual part: individual_part/individual_report.html
 
----
-
 ## 🛠 Tools
 - R,
 - dplyr
@@ -191,8 +189,6 @@ Individual part: individual_part/individual_report.html
 - recommenderlab
 - lsa
 - textstem
-
----
 
 ## 📌 Authors
 Group 9 + Dmitrii Podolin
