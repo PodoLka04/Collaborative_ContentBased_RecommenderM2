@@ -1,3 +1,11 @@
+# 🌐 Language / Язык
+
+[🇬🇧 English](#english) | [🇷🇺 Русский](#russian)
+
+---
+
+## <a name="russian"></a> 
+
 # Collaborative ContentBased Recommender (группа 9)
 
 ## 📌 О проекте
@@ -87,3 +95,105 @@ R, dplyr, ggplot2, igraph, tidytext, recommenderlab, lsa, textstem
 ## 📌 Авторы
 Группа 9 + Подолин Дмитрий 
 НИУ ВШЭ, курс "Технологии анализа данных"
+
+---
+
+## <a name="english"></a>
+
+# Collaborative ContentBased Recommender (Group 9)
+
+## 📌 About the project
+
+Final project for the **"Data Analysis Technologies"** course (HSE Minor, 2nd Semester).
+
+**Goal:** creating effective movie recommendation systems that can predict user preferences.
+
+**Methods:**
+- Network analysis (movie communities)
+- Text and sentiment analysis (tags, sentiment)
+- Recommendation systems: Collaborative Filtering (IBCF) + Content-based
+
+> ⚠️ **Important:** The original data was stored on a university server that is currently inaccessible.  
+> Therefore, **the Rmd code cannot be executed**, but the research results are preserved in HTML reports.
+
+## 📁 Repository contents
+
+### Group part
+| File | Description |
+|------|-------------|
+| `group_code.Rmd` | Source code |
+| `group_report.html` | HTML report with findings |
+
+### Individual part
+| File | Description |
+|------|-------------|
+| `individual_code.Rmd` | Source code |
+| `individual_feedback.png` | Screenshot of grade and feedback |
+| `individual_report.html` | HTML report |
+| `individual_task.png` | Screenshot of assignment |
+
+## 👥 Group part
+
+**Grade:** 8 / 10
+
+**What was done:**
+- Network analysis (identifying movie communities)
+- Text analysis (top-15 tags, sentiment)
+- Two recommendation systems (IBCF + Content-based)
+- System examples and formal metrics (RMSE, MSE, MAE)
+
+## 👤 Individual part
+
+**Student:** Dmitrii Podolin
+
+**Task:**  
+> Add a "presence of popular actors" variable to the content-based system, where popular actors are defined as the top 5 most frequently occurring actors in the dataset. Compare predictions on the same examples in the new (with actors) and old (without actors) systems.
+
+**Top 5 actors (by frequency):**
+1. Jim Carrey
+2. Kirsten Dunst
+3. Brian Cox
+4. Morgan Freeman
+5. Gary Oldman
+
+**Result:**
+- The **without actors** system recommends movies only by tags
+- The **with actors** system also considers the presence of popular actors
+- Using 1995 movies as an example, the results differ, confirming the impact of the added variable
+
+**Example:**
+```r
+user_favorite_movies <- c("Jumanji (1995)", "Sense and Sensibility (1995)", 
+                          "Leaving Las Vegas (1995)", "Babe (1995)", 
+                          "Seven (a.k.a. Se7en) (1995)")
+
+# Without actors: movies by tags (ignoring cast)
+# With actors: movies featuring at least one of the top 5 actors
+```
+
+## Grade: 7.50 / 10.00
+
+---
+
+## 🚀 How to view
+Group part: group_part/group_report.html
+
+Individual part: individual_part/individual_report.html
+
+---
+
+## 🛠 Tools
+- R,
+- dplyr
+- ggplot2
+- igraph
+- tidytext
+- recommenderlab
+- lsa
+- textstem
+
+---
+
+## 📌 Authors
+Group 9 + Dmitrii Podolin
+HSE University, "Data Analysis Technologies" course
